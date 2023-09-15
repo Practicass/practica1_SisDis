@@ -63,6 +63,16 @@ func receiveMessage(CONN_HOST string, CONN_PORT string, conn net.Conn) {
 	conn.Close()
 }
 
+func terceraArq(requestChan chan com.Request,replyChan chan com.Reply){
+	for{
+		request := <-requestChan
+		primos := FindPrimes(request.Interval)
+		reply := com.Reply{request.Id, primos}
+		replyChan <- reply
+
+	}
+}
+
 func main() {
 	var CONN_TYPE = "tcp"
 	var CONN_HOST = "127.0.0.1"
@@ -91,8 +101,34 @@ func main() {
 	 //	go receiveMessage(CONN_HOST, CONN_PORT, conn)
 	 //}
 
+
 	//--------------------------------------------------------------
 	//-----------------------TERCERA ARQUITECTURA-------------------
 	// //--------------------------------------------------------------
-	
+	//requestChan := make(chan com.Request)
+	//replyChan := make(chan com.Reply)
+	//for i:=0; i<4; i++ {
+	//	go terceraArq(requestChan, replyChan)
+	//}
+	//for {
+	//	conn, err := listener.Accept()
+	//
+	//	checkError(err)
+	//
+	//	var request com.Request
+	//
+	//	encoder := gob.NewEncoder(conn)
+	//	decoder := gob.NewDecoder(conn)
+	//	err = decoder.Decode(&request)
+	//	checkError(err)
+	//	
+	//	requestChan <- request
+//
+	//	reply := <- replyChan
+	//	err = encoder.Encode(reply)
+	//	checkError(err)
+	//
+	//	conn.Close()
+//
+	//}
 }
