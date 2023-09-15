@@ -6,7 +6,7 @@
 * FICHERO: server.go
 * DESCRIPCIÓN: contiene la funcionalidad esencial para realizar los servidores
 *				correspondientes a la práctica 1
-*/
+ */
 package main
 
 import (
@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"io"
 	"practica1/com"
 )
 
@@ -37,7 +36,8 @@ func IsPrime(n int) (foundDivisor bool) {
 
 // PRE: interval.A < interval.B
 // POST: FindPrimes devuelve todos los números primos comprendidos en el
-// 		intervalo [interval.A, interval.B]
+//
+//	intervalo [interval.A, interval.B]
 func FindPrimes(interval com.TPInterval) (primes []int) {
 	for i := interval.A; i <= interval.B; i++ {
 		if IsPrime(i) {
@@ -47,15 +47,52 @@ func FindPrimes(interval com.TPInterval) (primes []int) {
 	return primes
 }
 
-func main() {
+func receiveMessage(CONN_HOST string, CONN_PORT string, conn net.Conn) {
+	var request com.Request
 
-	listener, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	encoder := gob.NewEncoder(conn)
+	decoder := gob.NewDecoder(conn)
+	err := decoder.Decode(&request)
 	checkError(err)
 
-	conn, err := listener.Accept()
-	defer conn.Close()
+	primos := FindPrimes(request.Interval)
+	reply := com.Reply{request.Id, primos}
+	err = encoder.Encode(reply)
 	checkError(err)
 
-    // TO DO
+	conn.Close()
 }
 
+func main() {
+	var CONN_TYPE = "tcp"
+	var CONN_HOST = "127.0.0.1"
+	var CONN_PORT = "30000"
+	listener, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	checkError(err)
+	//--------------------------------------------------------------
+	//-----------------------PRIMERA ARQUITECTURA-------------------
+	//--------------------------------------------------------------
+	//for {
+	//	conn, err := listener.Accept()
+	//	defer conn.Close() //se ejecutara al final, es añadido a la pila
+	//	checkError(err)
+	//
+	//	receiveMessage(CONN_HOST, CONN_PORT, conn)
+	//}
+
+	//--------------------------------------------------------------
+	//-----------------------SEGUNDA ARQUITECTURA-------------------
+	// //--------------------------------------------------------------
+	 //for {
+	 //	conn, err := listener.Accept()
+	 //	defer conn.Close() //se ejecutara al final, es añadido a la pila
+	 //	checkError(err)
+	 //	
+	 //	go receiveMessage(CONN_HOST, CONN_PORT, conn)
+	 //}
+
+	//--------------------------------------------------------------
+	//-----------------------TERCERA ARQUITECTURA-------------------
+	// //--------------------------------------------------------------
+	
+}
