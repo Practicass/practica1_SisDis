@@ -85,7 +85,7 @@ func terceraArq(requestChan chan requestEncoder) {
 	}
 }
 
-func cuartaArq(requestChan chan com.Request, replyChan chan com.Reply) {
+func cuartaArq(requestChan chan requestEncoder) {
 	for {
 		// SSH client configuration
 		sshConfig := &ssh.ClientConfig{
@@ -114,9 +114,8 @@ func cuartaArq(requestChan chan com.Request, replyChan chan com.Reply) {
 		}
 		defer session.Close()
 
-		request := <-requestChan
-		fmt.Println(request)
-
+		requestEnc := <-requestChan
+		request := requestEnc.req
 		// Define a custom function in Go source code
 		functionCode := fmt.Sprint(`
 			package main
@@ -202,8 +201,9 @@ func cuartaArq(requestChan chan com.Request, replyChan chan com.Reply) {
 			log.Fatalf("Failed in json")
 		}
 
-		// Print or return the output as needed
-		replyChan <- reply
+		err = requestEnc.encoder.Encode(&reply)
+		checkError(err)
+
 	}
 }
 
@@ -238,9 +238,30 @@ func main() {
 	//--------------------------------------------------------------
 	//-----------------------TERCERA ARQUITECTURA-------------------
 	// //--------------------------------------------------------------
+	//requestChan := make(chan requestEncoder)
+	//for i:=0; i<6; i++ {
+	//	go terceraArq(requestChan)
+	//}
+	//for{
+	//	conn, err := listener.Accept()
+	//
+	//	checkError(err)
+	//	var requestEnc requestEncoder 
+	//	requestEnc.encoder = gob.NewEncoder(conn)
+	//	decoder := gob.NewDecoder(conn)
+	//	
+	//	err = decoder.Decode(&requestEnc.req)
+	//	checkError(err)
+	//	
+	//	
+	//	requestChan <- requestEnc
+//
+//
+	//}
+	//---------------------------------------------------------------------------
 	requestChan := make(chan requestEncoder)
-	for i:=0; i<6; i++ {
-		go terceraArq(requestChan)
+	for i := 0; i < 6; i++ {
+		go cuartaArq(requestChan)
 	}
 	for{
 		conn, err := listener.Accept()
@@ -255,40 +276,7 @@ func main() {
 		
 		
 		requestChan <- requestEnc
-
-
 	}
-	//---------------------------------------------------------------------------
-	//requestChan := make(chan com.Request, 60)
-	//replyChan := make(chan com.Reply, 60)
-	//for i := 0; i < 4; i++ {
-	//	go cuartaArq(requestChan, replyChan)
-	//}
-	//var encoder = make([]*gob.Encoder, 61)
-	//var decoder = make([]*gob.Decoder, 61)
-	//var request com.Request
-	//var conn net.Conn
-	//for n := 1; n <= 60; n++ {
-	//	conn, err := listener.Accept()
-//
-	//	checkError(err)
-//
-	//	encoder[n] = gob.NewEncoder(conn)
-	//	decoder[n] = gob.NewDecoder(conn)
-	//	err = decoder[n].Decode(&request)
-	//	checkError(err)
-	//	requestChan <- request
-	//	fmt.Println("hola")
-	//}
-	//for n := 1; n <= 60; n++ {
-//
-	//	fmt.Println("adios")
-	//	reply := <-replyChan
-//
-	//	err = encoder[reply.Id].Encode(reply)
-	//	checkError(err)
-//
-	//	conn.Close()
-	//}
+
 
 }
