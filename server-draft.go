@@ -20,11 +20,14 @@ import (
 	"practica1/com"
 	"strconv"
 
+	"bufio"
+
+
 	"golang.org/x/crypto/ssh"
 )
 
-type requestEncoder struct{
-	req com.Request
+type requestEncoder struct {
+	req     com.Request
 	encoder *gob.Encoder
 }
 
@@ -85,29 +88,28 @@ func terceraArq(requestChan chan requestEncoder) {
 	}
 }
 
-func cuartaArq(requestChan chan requestEncoder) {
+func cuartaArq(requestChan chan requestEncoder, ip string) {
+
 	for {
-		// SSH client configuration
+
 		sshConfig := &ssh.ClientConfig{
-			User: "as",
+			User: "a842255",
 			Auth: []ssh.AuthMethod{
 				// You can use password or key authentication here.
 				// For key authentication, load your private key.
 				// Example:
 				// ssh.PublicKeys(privateKey),
-				ssh.Password("as"),
+				ssh.Password("philha32"),
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // WARNING: Insecure for production use
 		}
 
-		// Connect to the remote server
-		client, err := ssh.Dial("tcp", "192.168.56.2:22", sshConfig)
+		client, err := ssh.Dial("tcp", ip, sshConfig)
 		if err != nil {
 			log.Fatalf("Failed to dial: %s", err)
 		}
 		defer client.Close()
 
-		// Create a session
 		session, err := client.NewSession()
 		if err != nil {
 			log.Fatalf("Failed to create session: %s", err)
@@ -116,7 +118,7 @@ func cuartaArq(requestChan chan requestEncoder) {
 
 		requestEnc := <-requestChan
 		request := requestEnc.req
-		// Define a custom function in Go source code
+
 		functionCode := fmt.Sprint(`
 			package main
 
@@ -147,7 +149,8 @@ func cuartaArq(requestChan chan requestEncoder) {
     	    // POST: IsPrime devuelve verdad si n es primo y falso en caso contrario
     	    func IsPrime(n int) (foundDivisor bool) {
     	       foundDivisor = false
-    	       for i := 2; (i < n) && !foundDivisor; i++ {
+    	       me(i) {
+    	               primfor i := 2; (i < n) && !foundDivisor; i++ {
     	           foundDivisor = (n%i == 0)
     	       }
     	       return !foundDivisor
@@ -159,8 +162,7 @@ func cuartaArq(requestChan chan requestEncoder) {
     	   //	intervalo [interval.A, interval.B]
     	   func FindPrimes(interval TPInterval) (primes []int) {
     	       for i := interval.A; i <= interval.B; i++ {
-    	           if IsPrime(i) {
-    	               primes = append(primes, i)
+    	           if IsPries = append(primes, i)
     	           }
     	       }
     	       return primes
@@ -180,12 +182,12 @@ func cuartaArq(requestChan chan requestEncoder) {
 
     	`)
 
-		// Execute the function code remotely and capture the output
 		var stdout, stderr bytes.Buffer
 		session.Stdout = &stdout
 		session.Stderr = &stderr
 
-		// Save the function code to a temporary file and run it
+
+
 		err = session.Run("echo '" + functionCode + "' > custom_function.go && go run custom_function.go " + strconv.Itoa(request.Id) + " " + strconv.Itoa(request.Interval.A) + " " + strconv.Itoa(request.Interval.B))
 		if err != nil {
 			log.Fatalf("Failed to run custom function: %s", err)
@@ -193,7 +195,7 @@ func cuartaArq(requestChan chan requestEncoder) {
 
 		// Retrieve the output
 		output := []byte(stdout.String())
-
+		//fmt.Println(string(output))
 		var reply com.Reply
 
 		err = json.Unmarshal(output, &reply)
@@ -246,37 +248,40 @@ func main() {
 	//	conn, err := listener.Accept()
 	//
 	//	checkError(err)
-	//	var requestEnc requestEncoder 
+	//	var requestEnc requestEncoder
 	//	requestEnc.encoder = gob.NewEncoder(conn)
 	//	decoder := gob.NewDecoder(conn)
-	//	
+	//
 	//	err = decoder.Decode(&requestEnc.req)
 	//	checkError(err)
-	//	
-	//	
+	//
+	//
 	//	requestChan <- requestEnc
-//
-//
+	//
+	//
 	//}
 	//---------------------------------------------------------------------------
 	requestChan := make(chan requestEncoder)
-	for i := 0; i < 6; i++ {
-		go cuartaArq(requestChan)
+	file, err := os.Open("file.txt")
+	checkError(err)
+	fileScanner := bufio.NewScanner(file)
+	for i := 0; i < 4; i++ {
+		fileScanner.Scan()
+		ip := fileScanner.Text()
+		go cuartaArq(requestChan, ip)
 	}
-	for{
+	for {
 		conn, err := listener.Accept()
-	
+
 		checkError(err)
-		var requestEnc requestEncoder 
+		var requestEnc requestEncoder
 		requestEnc.encoder = gob.NewEncoder(conn)
 		decoder := gob.NewDecoder(conn)
-		
+
 		err = decoder.Decode(&requestEnc.req)
 		checkError(err)
-		
-		
+
 		requestChan <- requestEnc
 	}
-
 
 }
