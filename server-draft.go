@@ -12,16 +12,17 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"practica1/com"
+
 	"strconv"
 
 	"bufio"
-
 
 	"golang.org/x/crypto/ssh"
 )
@@ -91,15 +92,16 @@ func terceraArq(requestChan chan requestEncoder) {
 func cuartaArq(requestChan chan requestEncoder, ip string) {
 
 	for {
+		fmt.Println(ip)
 
 		sshConfig := &ssh.ClientConfig{
-			User: "a842255",
+			User: "as",
 			Auth: []ssh.AuthMethod{
 				// You can use password or key authentication here.
 				// For key authentication, load your private key.
 				// Example:
 				// ssh.PublicKeys(privateKey),
-				ssh.Password("philha32"),
+				ssh.Password("as"),
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // WARNING: Insecure for production use
 		}
@@ -133,37 +135,35 @@ func cuartaArq(requestChan chan requestEncoder, ip string) {
 				A int
 				B int
 			}
-			
 			type Request struct {
 				Id int
 				Interval TPInterval
 			}
-
 			type Reply struct {
 				Id int
 				Primes []int
 			}
-			
 
     	    // PRE: verdad
     	    // POST: IsPrime devuelve verdad si n es primo y falso en caso contrario
     	    func IsPrime(n int) (foundDivisor bool) {
     	       foundDivisor = false
-    	       me(i) {
-    	               primfor i := 2; (i < n) && !foundDivisor; i++ {
+    	        for i := 2; (i < n) && !foundDivisor; i++ {
     	           foundDivisor = (n%i == 0)
     	       }
     	       return !foundDivisor
     	   }
-	   
+
     	   // PRE: interval.A < interval.B
     	   // POST: FindPrimes devuelve todos los números primos comprendidos en el
     	   //
     	   //	intervalo [interval.A, interval.B]
     	   func FindPrimes(interval TPInterval) (primes []int) {
     	       for i := interval.A; i <= interval.B; i++ {
-    	           if IsPries = append(primes, i)
-    	           }
+    	           if IsPrime(i){
+					primes = append(primes, i)
+				   } 
+    	           
     	       }
     	       return primes
     	   }
@@ -186,14 +186,12 @@ func cuartaArq(requestChan chan requestEncoder, ip string) {
 		session.Stdout = &stdout
 		session.Stderr = &stderr
 
-
-
-		err = session.Run("echo '" + functionCode + "' > custom_function.go && go run custom_function.go " + strconv.Itoa(request.Id) + " " + strconv.Itoa(request.Interval.A) + " " + strconv.Itoa(request.Interval.B))
+		err = session.Run("echo '" + functionCode + "' > primos.go && go run primos.go " + strconv.Itoa(request.Id) + " " + strconv.Itoa(request.Interval.A) + " " + strconv.Itoa(request.Interval.B))
 		if err != nil {
-			log.Fatalf("Failed to run custom function: %s", err)
+			log.Fatalf("Failed to run primos: %s", err)
 		}
+		fmt.Println("fin")
 
-		// Retrieve the output
 		output := []byte(stdout.String())
 		//fmt.Println(string(output))
 		var reply com.Reply
@@ -262,7 +260,7 @@ func main() {
 	//}
 	//---------------------------------------------------------------------------
 	requestChan := make(chan requestEncoder)
-	file, err := os.Open("file.txt")
+	file, err := os.Open(os.Args[1])
 	checkError(err)
 	fileScanner := bufio.NewScanner(file)
 	for i := 0; i < 4; i++ {
