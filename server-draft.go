@@ -95,15 +95,12 @@ func cuartaArq(requestChan chan requestEncoder, ip string) {
 		fmt.Println(ip)
 
 		sshConfig := &ssh.ClientConfig{
-			User: "as",
+			User: "",//usuario del worker(aNIP)
 			Auth: []ssh.AuthMethod{
-				// You can use password or key authentication here.
-				// For key authentication, load your private key.
-				// Example:
-				// ssh.PublicKeys(privateKey),
-				ssh.Password("as"),
+
+				ssh.Password(""), //contraseña del worker
 			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // WARNING: Insecure for production use
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(), 
 		}
 
 		client, err := ssh.Dial("tcp", ip, sshConfig)
@@ -258,7 +255,9 @@ func main() {
 	//
 	//
 	//}
-	//---------------------------------------------------------------------------
+	//-----------------------------------------------------------------
+	//-----------------------CUARTA ARQUITECTURA-----------------------
+	//-----------------------------------------------------------------
 	requestChan := make(chan requestEncoder)
 	file, err := os.Open(os.Args[1])
 	checkError(err)
